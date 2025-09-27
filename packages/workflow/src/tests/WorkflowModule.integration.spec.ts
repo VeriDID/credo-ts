@@ -1,8 +1,8 @@
 import { AskarModule } from '@credo-ts/askar'
-import { Agent, ConsoleLogger, LogLevel } from '@credo-ts/core'
+import { Agent, AgentConfig, ConsoleLogger, LogLevel } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { askar } from '@openwallet-foundation/askar-nodejs'
-import { WorkflowModule } from '..'
+import { WorkflowModule, WorkflowTemplate } from '..'
 
 const makeAgent = async () => {
   const agent = new Agent({
@@ -10,7 +10,7 @@ const makeAgent = async () => {
       label: 'wf-test',
       logger: new ConsoleLogger(LogLevel.off),
       walletConfig: { id: 'wf-test', key: 'wf-test' },
-    },
+    } as unknown as AgentConfig,
     dependencies: agentDependencies,
     modules: {
       askar: new AskarModule({
@@ -41,7 +41,7 @@ describe('Workflow module', () => {
       catalog: {},
       actions: [],
     }
-    await agent.modules.workflow.publishTemplate(tpl as any)
+    await agent.modules.workflow.publishTemplate(tpl as unknown as WorkflowTemplate)
     await agent.shutdown()
   })
 
@@ -57,7 +57,10 @@ describe('Workflow module', () => {
       catalog: {},
       actions: [],
     }
-    await expect(agent.modules.workflow.publishTemplate(bad as any)).rejects.toHaveProperty('code', 'invalid_template')
+    await expect(agent.modules.workflow.publishTemplate(bad as unknown as WorkflowTemplate)).rejects.toHaveProperty(
+      'code',
+      'invalid_template'
+    )
     await agent.shutdown()
   })
 
@@ -73,7 +76,7 @@ describe('Workflow module', () => {
       catalog: {},
       actions: [],
     }
-    await agent.modules.workflow.publishTemplate(tpl as any)
+    await agent.modules.workflow.publishTemplate(tpl as unknown as WorkflowTemplate)
     const a = await agent.modules.workflow.start({ template_id: 'single', connection_id: 'conn-1' })
     const b = await agent.modules.workflow.start({ template_id: 'single', connection_id: 'conn-1' })
     expect(a.instanceId).toBe(b.instanceId)
@@ -92,7 +95,7 @@ describe('Workflow module', () => {
       catalog: {},
       actions: [],
     }
-    await agent.modules.workflow.publishTemplate(tpl as any)
+    await agent.modules.workflow.publishTemplate(tpl as unknown as WorkflowTemplate)
     const a = await agent.modules.workflow.start({ template_id: 'multi', connection_id: 'c1', context: { k: 'A' } })
     const b = await agent.modules.workflow.start({ template_id: 'multi', connection_id: 'c1', context: { k: 'A' } })
     const c = await agent.modules.workflow.start({ template_id: 'multi', connection_id: 'c1', context: { k: 'B' } })
@@ -126,7 +129,7 @@ describe('Workflow module', () => {
         },
       ],
     }
-    await agent.modules.workflow.publishTemplate(tpl as any)
+    await agent.modules.workflow.publishTemplate(tpl as unknown as WorkflowTemplate)
     const inst = await agent.modules.workflow.start({ template_id: 'flow', context: {} })
     const s1 = await agent.modules.workflow.status({ instance_id: inst.instanceId })
     expect(s1.allowed_events.includes('finish')).toBe(false)

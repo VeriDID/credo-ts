@@ -1,5 +1,5 @@
 import { AskarModule } from '@credo-ts/askar'
-import { Agent, ConsoleLogger, LogLevel } from '@credo-ts/core'
+import { Agent, AgentConfig, ConsoleLogger, LogLevel } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { askar } from '@openwallet-foundation/askar-nodejs'
 import { WorkflowModule } from '..'
@@ -10,7 +10,7 @@ const makeAgent = async () => {
       label: 'wf-status-ui-test',
       logger: new ConsoleLogger(LogLevel.off),
       walletConfig: { id: 'wf-status-ui-test', key: 'wf-status-ui-test' },
-    },
+    } as unknown as AgentConfig,
     dependencies: agentDependencies,
     modules: {
       askar: new AskarModule({
@@ -41,7 +41,7 @@ describe('Status UI payload', () => {
       { type: 'button', label: 'Go', event: 'go' },
       { type: 'submit-button', label: 'Submit', event: 'submit' },
     ]
-    const tpl = {
+    const tpl: import('..').WorkflowTemplate = {
       template_id: 'ui-tpl',
       version: '1.0.0',
       title: 'UI Demo',
@@ -56,7 +56,7 @@ describe('Status UI payload', () => {
       actions: [],
       display_hints: { states: { menu: ui } },
     }
-    await agent.modules.workflow.publishTemplate(tpl as any)
+    await agent.modules.workflow.publishTemplate(tpl)
     const inst = await agent.modules.workflow.start({ template_id: 'ui-tpl' })
 
     const s1 = await agent.modules.workflow.status({ instance_id: inst.instanceId, include_ui: true })

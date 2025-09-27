@@ -1,9 +1,16 @@
+import type { AgentContext } from '@credo-ts/core'
 import { IssueCredentialV2Action, PresentProofV2Action } from '..'
+import type { ActionCtx } from '..'
+import type { WorkflowInstanceData, WorkflowTemplate } from '..'
 
-const makeAgentContext = (mocks: any) => ({
+const makeAgentContext = (mocks: {
+  credentials?: { offerCredential: jest.Mock; findOfferMessage: jest.Mock }
+  proofs?: { requestProof: jest.Mock; findRequestMessage: jest.Mock }
+  connections?: { getById: jest.Mock }
+}) => ({
   dependencyManager: {
-    resolve: (ctor: any) => {
-      const name = ctor?.name || ''
+    resolve: (ctor: unknown) => {
+      const name = (ctor as { name?: string })?.name || ''
       if (name.includes('CredentialsApi')) return mocks.credentials
       if (name.includes('ProofsApi')) return mocks.proofs
       if (name.includes('ConnectionService')) return mocks.connections
@@ -12,7 +19,7 @@ const makeAgentContext = (mocks: any) => ({
   },
 })
 
-const baseInstance = {
+const baseInstance: WorkflowInstanceData = {
   instance_id: 'i1',
   template_id: 't1',
   template_version: '1.0.0',
@@ -29,7 +36,7 @@ const baseInstance = {
 describe('Action handlers message id retrieval', () => {
   test('IssueCredentialV2Action uses findOfferMessage id and falls back', async () => {
     const action = new IssueCredentialV2Action()
-    const template: any = {
+    const template = {
       template_id: 't1',
       version: '1.0.0',
       title: 'T',
@@ -43,8 +50,8 @@ describe('Action handlers message id retrieval', () => {
           },
         },
       },
-    }
-    const actionDef: any = {
+    } as unknown as WorkflowTemplate
+    const actionDef = {
       key: 'offer',
       typeURI: 'https://didcomm.org/issue-credential/2.0/offer-credential',
       profile_ref: 'cp.test',
@@ -55,13 +62,13 @@ describe('Action handlers message id retrieval', () => {
       findOfferMessage: jest.fn(async (_id: string) => ({ message: { id: 'msg-1' } })),
     }
     const connections = { getById: jest.fn(async () => ({ theirDid: 'did:example:holder' })) }
-    const ctx1 = {
-      agentContext: makeAgentContext({ credentials: credsMock1, connections }),
+    const ctx1: ActionCtx = {
+      agentContext: makeAgentContext({ credentials: credsMock1, connections }) as unknown as AgentContext,
       template,
       instance: baseInstance,
       action: actionDef,
     }
-    const res1 = await action.execute(ctx1 as any)
+    const res1 = await action.execute(ctx1)
     expect(res1.messageId).toBe('msg-1')
     expect(res1.artifacts?.issueRecordId).toBe('rec-1')
     // Fallback: findOfferMessage throws → use record id
@@ -71,19 +78,19 @@ describe('Action handlers message id retrieval', () => {
         throw new Error('not found')
       }),
     }
-    const ctx2 = {
-      agentContext: makeAgentContext({ credentials: credsMock2, connections }),
+    const ctx2: ActionCtx = {
+      agentContext: makeAgentContext({ credentials: credsMock2, connections }) as unknown as AgentContext,
       template,
       instance: baseInstance,
       action: actionDef,
     }
-    const res2 = await action.execute(ctx2 as any)
+    const res2 = await action.execute(ctx2)
     expect(res2.messageId).toBe('rec-2')
   })
 
   test('PresentProofV2Action uses findRequestMessage id and falls back', async () => {
     const action = new PresentProofV2Action()
-    const template: any = {
+    const template = {
       template_id: 't1',
       version: '1.0.0',
       title: 'T',
@@ -98,8 +105,8 @@ describe('Action handlers message id retrieval', () => {
           },
         },
       },
-    }
-    const actionDef: any = {
+    } as unknown as WorkflowTemplate
+    const actionDef = {
       key: 'request',
       typeURI: 'https://didcomm.org/present-proof/2.0/request-presentation',
       profile_ref: 'pp.test',
@@ -109,13 +116,13 @@ describe('Action handlers message id retrieval', () => {
       findRequestMessage: jest.fn(async (_id: string) => ({ message: { id: 'pmsg-1' } })),
     }
     const connections = { getById: jest.fn(async () => ({ theirDid: 'did:example:holder' })) }
-    const ctx1 = {
-      agentContext: makeAgentContext({ proofs: proofsMock1, connections }),
+    const ctx1: ActionCtx = {
+      agentContext: makeAgentContext({ proofs: proofsMock1, connections }) as unknown as AgentContext,
       template,
       instance: baseInstance,
       action: actionDef,
     }
-    const res1 = await action.execute(ctx1 as any)
+    const res1 = await action.execute(ctx1)
     expect(res1.messageId).toBe('pmsg-1')
     expect(res1.artifacts?.proofRecordId).toBe('prec-1')
     const proofsMock2 = {
@@ -124,13 +131,13 @@ describe('Action handlers message id retrieval', () => {
         throw new Error('not found')
       }),
     }
-    const ctx2 = {
-      agentContext: makeAgentContext({ proofs: proofsMock2, connections }),
+    const ctx2: ActionCtx = {
+      agentContext: makeAgentContext({ proofs: proofsMock2, connections }) as unknown as AgentContext,
       template,
       instance: baseInstance,
       action: actionDef,
     }
-    const res2 = await action.execute(ctx2 as any)
+    const res2 = await action.execute(ctx2)
     expect(res2.messageId).toBe('prec-2')
   })
 })

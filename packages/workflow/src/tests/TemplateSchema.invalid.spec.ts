@@ -2,7 +2,7 @@ import { validateTemplateJson } from '..'
 
 describe('schemas.ts more invalids', () => {
   test('transitions missing from', () => {
-    const bad: any = {
+    const bad: unknown = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -16,7 +16,7 @@ describe('schemas.ts more invalids', () => {
   })
 
   test('transitions missing to', () => {
-    const bad: any = {
+    const bad: unknown = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -30,7 +30,7 @@ describe('schemas.ts more invalids', () => {
   })
 
   test('states item missing name', () => {
-    const bad: any = {
+    const bad: unknown = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -44,7 +44,7 @@ describe('schemas.ts more invalids', () => {
   })
 
   test('proof requested_predicates item missing p_value', () => {
-    const bad: any = {
+    const bad: unknown = {
       template_id: 't',
       version: '1',
       title: 'T',

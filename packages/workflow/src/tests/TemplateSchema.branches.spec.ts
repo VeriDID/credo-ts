@@ -13,22 +13,22 @@ const base = {
 
 describe('schemas.ts JSON-schema branches', () => {
   test('root additionalProperties=false', () => {
-    const bad: any = { ...base, foo: 'bar' }
+    const bad = { ...base, foo: 'bar' }
     expect(() => validateTemplateJson(bad)).toThrow()
   })
 
   test('instance_policy additionalProperties=false', () => {
-    const bad: any = { ...base, instance_policy: { mode: 'multi_per_connection', extra: 1 } }
+    const bad = { ...base, instance_policy: { mode: 'multi_per_connection', extra: 1 } }
     expect(() => validateTemplateJson(bad)).toThrow()
   })
 
   test('transitions item additionalProperties=false', () => {
-    const bad: any = { ...base, transitions: [{ from: 'a', to: 'a', on: 'x', extra: true }] }
+    const bad = { ...base, transitions: [{ from: 'a', to: 'a', on: 'x', extra: true }] }
     expect(() => validateTemplateJson(bad)).toThrow()
   })
 
   test('credential_profiles entry additionalProperties=false', () => {
-    const bad: any = {
+    const bad = {
       ...base,
       catalog: { credential_profiles: { x: { cred_def_id: 'C', attribute_plan: {}, to_ref: 'holder', extra: 'no' } } },
     }
@@ -36,7 +36,7 @@ describe('schemas.ts JSON-schema branches', () => {
   })
 
   test('proof_profiles entry additionalProperties=false', () => {
-    const bad: any = {
+    const bad = {
       ...base,
       catalog: { proof_profiles: { x: { to_ref: 'holder', extra: 'no' } } },
     }
@@ -44,7 +44,7 @@ describe('schemas.ts JSON-schema branches', () => {
   })
 
   test('requested_predicates item additionalProperties=false', () => {
-    const bad: any = {
+    const bad = {
       ...base,
       catalog: {
         proof_profiles: {

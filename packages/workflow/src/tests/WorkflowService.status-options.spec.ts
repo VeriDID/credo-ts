@@ -1,8 +1,14 @@
+import type { AgentConfig, AgentContext } from '@credo-ts/core'
 import { WorkflowService } from '..'
+import type { WorkflowTemplate } from '..'
+import { WorkflowModuleConfig } from '..'
+import type { WorkflowInstanceRecord } from '../repository/WorkflowInstanceRecord'
+import type { WorkflowTemplateRecord } from '../repository/WorkflowTemplateRecord'
+import type { WorkflowTemplateRepository } from '../repository/WorkflowTemplateRepository'
 
 describe('WorkflowService.status include flags', () => {
   const make = () => {
-    const tpl: any = {
+    const tpl: WorkflowTemplate = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -21,8 +27,10 @@ describe('WorkflowService.status include flags', () => {
       catalog: {},
       actions: [],
     }
-    const templateRepo = { findByTemplateIdAndVersion: jest.fn(async () => ({ template: tpl })) } as any
-    const inst: any = {
+    const templateRepo = {
+      findByTemplateIdAndVersion: jest.fn(async () => ({ template: tpl }) as unknown as WorkflowTemplateRecord),
+    } as unknown as WorkflowTemplateRepository
+    const inst = {
       id: 'i',
       instanceId: 'i',
       templateId: 't',
@@ -33,25 +41,36 @@ describe('WorkflowService.status include flags', () => {
       artifacts: {},
       history: [],
       status: 'active',
-    }
-    const instanceRepo = { getById: jest.fn(async () => inst), update: jest.fn() } as any
-    const config = { guardEngine: 'jmespath', enableProblemReport: true } as any
-    const agentConfig = { logger: { debug() {}, info() {} } } as any
+    } as unknown as WorkflowInstanceRecord
+    const instanceRepo = {
+      getById: jest.fn(async () => inst),
+      update: jest.fn(),
+    } as unknown as import('../repository/WorkflowInstanceRepository').WorkflowInstanceRepository
+    const config = new WorkflowModuleConfig({ guardEngine: 'jmespath', enableProblemReport: true })
+    const agentConfig = { logger: { debug() {}, info() {} } } as unknown as AgentConfig
     const svc = new WorkflowService(templateRepo, instanceRepo, config, agentConfig)
     return { svc }
   }
 
   test('include_actions=false include_ui=true', async () => {
     const { svc } = make()
-    const r = await svc.status({} as any, { instance_id: 'i', include_actions: false, include_ui: true })
+    const r = await svc.status({} as unknown as AgentContext, {
+      instance_id: 'i',
+      include_actions: false,
+      include_ui: true,
+    })
     expect(r.action_menu).toEqual([])
     expect(Array.isArray(r.ui)).toBe(true)
   })
 
   test('include_actions=true include_ui=false', async () => {
     const { svc } = make()
-    const r = await svc.status({} as any, { instance_id: 'i', include_actions: true, include_ui: false })
+    const r = await svc.status({} as unknown as AgentContext, {
+      instance_id: 'i',
+      include_actions: true,
+      include_ui: false,
+    })
     expect(r.action_menu.map((i) => i.event)).toEqual(expect.arrayContaining(['go', 'send']))
-    expect((r as any).ui).toBeUndefined()
+    expect(r.ui).toBeUndefined()
   })
 })

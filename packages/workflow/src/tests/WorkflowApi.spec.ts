@@ -1,31 +1,34 @@
-import { WorkflowApi } from '..'
+import { WorkflowApi, WorkflowService } from '..'
 
 describe('WorkflowApi pass-through', () => {
   const make = () => {
     const service = {
-      publishTemplate: jest.fn(async (_ctx: any, t: any) => ({ id: 'tpl', template: t })),
-      start: jest.fn(async (_ctx: any, o: any) => ({ id: o.instance_id || 'id1', instanceId: 'i1' })),
-      advance: jest.fn(async (_ctx: any, o: any) => ({ instanceId: o.instance_id })),
-      status: jest.fn(async (_ctx: any, o: any) => ({
+      publishTemplate: jest.fn(async (_ctx: unknown, t: unknown) => ({ id: 'tpl', template: t })),
+      start: jest.fn(async (_ctx: unknown, o: { instance_id?: string }) => ({
+        id: o.instance_id || 'id1',
+        instanceId: 'i1',
+      })),
+      advance: jest.fn(async (_ctx: unknown, o: { instance_id: string }) => ({ instanceId: o.instance_id })),
+      status: jest.fn(async (_ctx: unknown, o: { instance_id: string }) => ({
         instance_id: o.instance_id,
         state: 's',
         allowed_events: [],
         action_menu: [],
         artifacts: {},
       })),
-      pause: jest.fn(async (_ctx: any, o: any) => ({ instanceId: o.instance_id })),
-      resume: jest.fn(async (_ctx: any, o: any) => ({ instanceId: o.instance_id })),
-      cancel: jest.fn(async (_ctx: any, o: any) => ({ instanceId: o.instance_id })),
-      complete: jest.fn(async (_ctx: any, o: any) => ({ instanceId: o.instance_id })),
+      pause: jest.fn(async (_ctx: unknown, o: { instance_id: string }) => ({ instanceId: o.instance_id })),
+      resume: jest.fn(async (_ctx: unknown, o: { instance_id: string }) => ({ instanceId: o.instance_id })),
+      cancel: jest.fn(async (_ctx: unknown, o: { instance_id: string }) => ({ instanceId: o.instance_id })),
+      complete: jest.fn(async (_ctx: unknown, o: { instance_id: string }) => ({ instanceId: o.instance_id })),
     }
-    const agentContext: any = {}
-    const api = new WorkflowApi(service as any, agentContext)
+    const agentContext = {} as unknown as import('@credo-ts/core').AgentContext
+    const api = new WorkflowApi(service as unknown as WorkflowService, agentContext)
     return { api, service }
   }
 
   test('publishes template', async () => {
     const { api, service } = make()
-    const tpl: any = {
+    const tpl: import('..').WorkflowTemplate = {
       template_id: 't',
       version: '1.0.0',
       title: 'T',

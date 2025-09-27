@@ -1,23 +1,15 @@
-import {
-  AdvanceHandler,
-  CancelHandler,
-  CompleteHandler,
-  PauseHandler,
-  ResumeHandler,
-  WorkflowModuleConfig,
-} from '..'
+import { AdvanceHandler, CancelHandler, CompleteHandler, PauseHandler, ResumeHandler, WorkflowModuleConfig } from '..'
 
 const ctx = () => ({
   dependencyManager: {
-    resolve: (ctor: any) => {
+    resolve: (ctor: unknown) => {
       if (ctor === WorkflowModuleConfig) return new WorkflowModuleConfig({ enableProblemReport: true })
-      if (ctor?.name?.includes('AgentConfig')) return { logger: { info() {}, warn() {}, debug() {} } }
-      return {}
+      return { logger: { info() {}, warn() {}, debug() {} } }
     },
   },
 })
 
-const inbound = (message: any) => ({ agentContext: ctx(), connection: { id: 'c1' }, message }) as any
+const inbound = (message: unknown) => ({ agentContext: ctx(), connection: { id: 'c1' }, message })
 
 describe('Handlers success responses', () => {
   test('Pause/Resume/Cancel → StatusMessage response', async () => {
@@ -28,14 +20,16 @@ describe('Handlers success responses', () => {
       cancel: jest.fn(async () => ({})),
       status: jest.fn(async () => status),
     }
-    const pause = new PauseHandler(svc as any)
-    const resume = new ResumeHandler(svc as any)
-    const cancel = new CancelHandler(svc as any)
-    const resP = await pause.handle(inbound({ body: { instance_id: 'i1' }, threadId: 'i1' }))
-    const resR = await resume.handle(inbound({ body: { instance_id: 'i1' }, threadId: 'i1' }))
-    const resC = await cancel.handle(inbound({ body: { instance_id: 'i1' }, threadId: 'i1' }))
+    const pause = new PauseHandler(svc as unknown as import('..').WorkflowService)
+    const resume = new ResumeHandler(svc as unknown as import('..').WorkflowService)
+    const cancel = new CancelHandler(svc as unknown as import('..').WorkflowService)
+    const resP = await pause.handle(inbound({ body: { instance_id: 'i1' }, threadId: 'i1' }) as never)
+    const resR = await resume.handle(inbound({ body: { instance_id: 'i1' }, threadId: 'i1' }) as never)
+    const resC = await cancel.handle(inbound({ body: { instance_id: 'i1' }, threadId: 'i1' }) as never)
     for (const res of [resP, resR, resC]) {
-      expect((res as any)?.message?.type).toBe('https://didcomm.org/workflow/1.0/status')
+      expect((res as unknown as { message?: { type?: string } })?.message?.type).toBe(
+        'https://didcomm.org/workflow/1.0/status'
+      )
     }
   })
 
@@ -50,9 +44,11 @@ describe('Handlers success responses', () => {
         artifacts: {},
       })),
     }
-    const h = new CompleteHandler(svc as any)
-    const res = await h.handle(inbound({ body: { instance_id: 'i1' }, threadId: 'i1' }))
-    expect((res as any)?.message?.type).toBe('https://didcomm.org/workflow/1.0/status')
+    const h = new CompleteHandler(svc as unknown as import('..').WorkflowService)
+    const res = await h.handle(inbound({ body: { instance_id: 'i1' }, threadId: 'i1' }) as never)
+    expect((res as unknown as { message?: { type?: string } })?.message?.type).toBe(
+      'https://didcomm.org/workflow/1.0/status'
+    )
   })
 
   test('AdvanceHandler success with mismatched thid vs instance_id logs warn path', async () => {
@@ -66,8 +62,10 @@ describe('Handlers success responses', () => {
         artifacts: {},
       })),
     }
-    const h = new AdvanceHandler(svc as any)
-    const res = await h.handle(inbound({ body: { instance_id: 'i1', event: 'go' }, threadId: 'th-other' }))
-    expect((res as any)?.message?.type).toBe('https://didcomm.org/workflow/1.0/status')
+    const h = new AdvanceHandler(svc as unknown as import('..').WorkflowService)
+    const res = await h.handle(inbound({ body: { instance_id: 'i1', event: 'go' }, threadId: 'th-other' }) as never)
+    expect((res as unknown as { message?: { type?: string } })?.message?.type).toBe(
+      'https://didcomm.org/workflow/1.0/status'
+    )
   })
 })

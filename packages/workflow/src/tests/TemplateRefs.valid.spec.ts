@@ -2,7 +2,7 @@ import { validateTemplateRefs } from '..'
 
 describe('validateTemplateRefs positive (cp.* and pp.*)', () => {
   test('cp.* and pp.* profile_ref resolve to catalog entries', () => {
-    const tpl: any = {
+    const tpl: import('..').WorkflowTemplate = {
       template_id: 't',
       version: '1',
       title: 'T',

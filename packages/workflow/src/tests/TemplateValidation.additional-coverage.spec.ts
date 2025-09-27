@@ -2,7 +2,7 @@ import { validateTemplateJson, validateTemplateRefs } from '..'
 
 describe('schemas.ts additional coverage', () => {
   test('transitions missing on', () => {
-    const bad: any = {
+    const bad: unknown = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -16,7 +16,7 @@ describe('schemas.ts additional coverage', () => {
   })
 
   test('state missing type', () => {
-    const bad: any = {
+    const bad: unknown = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -30,7 +30,7 @@ describe('schemas.ts additional coverage', () => {
   })
 
   test('attribute_plan invalid variants', () => {
-    const base: any = {
+    const base: Record<string, unknown> = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -71,7 +71,7 @@ describe('schemas.ts additional coverage', () => {
   })
 
   test('validateTemplateRefs transition.from unknown', () => {
-    const bad: any = {
+    const bad = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -81,6 +81,6 @@ describe('schemas.ts additional coverage', () => {
       catalog: {},
       actions: [],
     }
-    expect(() => validateTemplateRefs(bad)).toThrow()
+    expect(() => validateTemplateRefs(bad as unknown as import('..').WorkflowTemplate)).toThrow()
   })
 })

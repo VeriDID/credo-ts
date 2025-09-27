@@ -13,14 +13,16 @@ describe('StartHandler success', () => {
         artifacts: {},
       })),
     }
-    const handler = new StartHandler(svc as any)
+    const handler = new StartHandler(svc as unknown as import('..').WorkflowService)
     const res = await handler.handle({
       agentContext: {
-        dependencyManager: { resolve: (_ctor: any) => ({ logger: { info() {}, warn() {}, debug() {} } }) },
+        dependencyManager: { resolve: (_ctor: unknown) => ({ logger: { info() {}, warn() {}, debug() {} } }) },
       },
       connection: { id: 'c1' },
       message: { body: { template_id: 't' }, id: 'id1' },
-    } as any)
-    expect((res as any)?.message?.type).toBe('https://didcomm.org/workflow/1.0/status')
+    } as never)
+    expect((res as unknown as { message?: { type?: string } })?.message?.type).toBe(
+      'https://didcomm.org/workflow/1.0/status'
+    )
   })
 })

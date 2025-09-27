@@ -1,4 +1,7 @@
-import { WorkflowInstanceRecord, WorkflowService, WorkflowTemplateRecord } from '..'
+import type { AgentConfig, AgentContext } from '@credo-ts/core'
+import { WorkflowInstanceRecord, WorkflowModuleConfig, WorkflowService, WorkflowTemplateRecord } from '..'
+import type { WorkflowTemplate } from '..'
+import type { WorkflowTemplateRepository } from '../repository/WorkflowTemplateRepository'
 
 describe('WorkflowService publishTemplate+start edge branches', () => {
   test('publishTemplate updates existing record (hash + template) and returns it', async () => {
@@ -12,21 +15,18 @@ describe('WorkflowService publishTemplate+start edge branches', () => {
         transitions: [],
         catalog: {},
         actions: [],
-      } as any,
+      } as unknown as WorkflowTemplate,
     })
     const templateRepo = {
       findByTemplateIdAndVersion: jest.fn(async () => existing),
       update: jest.fn(async () => {}),
       save: jest.fn(async () => {}),
-    } as any
-    const instanceRepo = {} as any
-    const svc = new WorkflowService(
-      templateRepo,
-      instanceRepo,
-      { guardEngine: 'jmespath' } as any,
-      { logger: { info() {}, debug() {} } } as any
-    )
-    const nextTpl: any = {
+    } as unknown as WorkflowTemplateRepository
+    const instanceRepo = {} as unknown as import('../repository/WorkflowInstanceRepository').WorkflowInstanceRepository
+    const svc = new WorkflowService(templateRepo, instanceRepo, new WorkflowModuleConfig({ guardEngine: 'jmespath' }), {
+      logger: { info() {}, debug() {} },
+    } as unknown as AgentConfig)
+    const nextTpl: WorkflowTemplate = {
       template_id: 't',
       version: '1',
       title: 'New',
@@ -36,14 +36,14 @@ describe('WorkflowService publishTemplate+start edge branches', () => {
       catalog: {},
       actions: [],
     }
-    const rec = await svc.publishTemplate({} as any, nextTpl)
+    const rec = await svc.publishTemplate({} as unknown as AgentContext, nextTpl)
     expect(templateRepo.update).toHaveBeenCalled()
     expect(rec.template.title).toBe('New')
     expect(rec.hash).toBeDefined()
   })
 
   test('start singleton_per_connection without autoReturnExistingOnSingleton throws already_exists', async () => {
-    const tpl: any = {
+    const tpl: WorkflowTemplate = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -53,7 +53,9 @@ describe('WorkflowService publishTemplate+start edge branches', () => {
       catalog: {},
       actions: [],
     }
-    const templateRepo = { findByTemplateIdAndVersion: jest.fn(async () => ({ template: tpl })) } as any
+    const templateRepo = {
+      findByTemplateIdAndVersion: jest.fn(async () => ({ template: tpl }) as unknown as WorkflowTemplateRecord),
+    } as unknown as WorkflowTemplateRepository
     const existing = new WorkflowInstanceRecord({
       instanceId: 'i',
       templateId: 't',
@@ -65,16 +67,17 @@ describe('WorkflowService publishTemplate+start edge branches', () => {
       status: 'active',
       history: [],
     })
-    const instanceRepo = { findByTemplateAndConnection: jest.fn(async () => [existing]) } as any
+    const instanceRepo = {
+      findByTemplateAndConnection: jest.fn(async () => [existing]),
+    } as unknown as import('../repository/WorkflowInstanceRepository').WorkflowInstanceRepository
     const svc = new WorkflowService(
       templateRepo,
       instanceRepo,
-      { guardEngine: 'jmespath', autoReturnExistingOnSingleton: false } as any,
-      { logger: { info() {}, debug() {} } } as any
+      new WorkflowModuleConfig({ guardEngine: 'jmespath', autoReturnExistingOnSingleton: false }),
+      { logger: { info() {}, debug() {} } } as unknown as AgentConfig
     )
-    await expect(svc.start({} as any, { template_id: 't', connection_id: 'c1' })).rejects.toHaveProperty(
-      'code',
-      'already_exists'
-    )
+    await expect(
+      svc.start({} as unknown as AgentContext, { template_id: 't', connection_id: 'c1' })
+    ).rejects.toHaveProperty('code', 'already_exists')
   })
 })

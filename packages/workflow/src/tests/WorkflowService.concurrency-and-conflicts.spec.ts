@@ -1,8 +1,10 @@
-import { WorkflowService } from '..'
+import type { AgentConfig, AgentContext } from '@credo-ts/core'
+import { WorkflowModuleConfig, WorkflowService } from '..'
+import type { WorkflowInstanceData, WorkflowTemplate } from '..'
 
 describe('WorkflowService concurrency conflict', () => {
   test('advance throws state_conflict when state changed concurrently', async () => {
-    const tpl: any = {
+    const tpl: WorkflowTemplate = {
       template_id: 't',
       version: '1.0.0',
       title: 'T',
@@ -15,8 +17,10 @@ describe('WorkflowService concurrency conflict', () => {
       catalog: {},
       actions: [],
     }
-    const tplRepo = { findByTemplateIdAndVersion: async () => ({ template: tpl }) } as any
-    const inst = {
+    const tplRepo = {
+      findByTemplateIdAndVersion: async () => ({ template: tpl }),
+    } as unknown as import('../repository/WorkflowTemplateRepository').WorkflowTemplateRepository
+    const inst: WorkflowInstanceData = {
       id: 'i1',
       instanceId: 'i1',
       templateId: 't',
@@ -28,26 +32,30 @@ describe('WorkflowService concurrency conflict', () => {
       status: 'active',
       history: [],
       idempotencyKeys: [],
-    }
+    } as unknown as WorkflowInstanceData
     let count = 0
     const getById = jest.fn(async () => {
       count += 1
       return count === 2 ? { ...inst, state: 'x' } : inst
     })
-    const instRepo = { getById, getByInstanceId: async () => inst, update: async () => {} } as any
+    const instRepo = {
+      getById,
+      getByInstanceId: async () => inst,
+      update: async () => {},
+    } as unknown as import('../repository/WorkflowInstanceRepository').WorkflowInstanceRepository
     const svc = new WorkflowService(
       tplRepo,
       instRepo,
-      {
+      new WorkflowModuleConfig({
         guardEngine: 'jmespath',
         autoReturnExistingOnSingleton: true,
         actionTimeoutMs: 15000,
         enableProblemReport: true,
-      } as any,
-      { logger: { debug() {}, info() {} } } as any
+      }),
+      { logger: { debug() {}, info() {} } } as unknown as AgentConfig
     )
     try {
-      await svc.advance({} as any, { instance_id: 'i1', event: 'go' })
+      await svc.advance({} as unknown as AgentContext, { instance_id: 'i1', event: 'go' })
     } catch {}
     expect(getById).toHaveBeenCalledTimes(2)
   })

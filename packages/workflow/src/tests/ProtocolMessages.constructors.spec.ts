@@ -1,11 +1,5 @@
-import {
-  CancelMessage,
-  CompleteMessage,
-  PauseMessage,
-  PublishTemplateMessage,
-  ResumeMessage,
-  StatusMessage,
-} from '..'
+import { CancelMessage, CompleteMessage, PauseMessage, PublishTemplateMessage, ResumeMessage, StatusMessage } from '..'
+import type { WorkflowTemplate } from '..'
 
 describe('Protocol messages constructors', () => {
   test('Pause/Resume/Cancel/Complete set type, body and thread', () => {
@@ -54,18 +48,18 @@ describe('Protocol messages constructors', () => {
   })
 
   test('PublishTemplateMessage sets type and embeds template', () => {
-    const tpl: any = {
+    const tpl: WorkflowTemplate = {
       template_id: 't',
       version: '1.0.0',
       title: 'T',
-      instance_policy: { mode: 'multi_per_connection' },
-      states: [{ name: 's', type: 'start' }],
+      instance_policy: { mode: 'multi_per_connection' as const },
+      states: [{ name: 's', type: 'start' as const }],
       transitions: [],
       catalog: {},
       actions: [],
     }
     const m = new PublishTemplateMessage({ body: { template: tpl, mode: 'upsert' } })
     expect(m.type).toBe('https://didcomm.org/workflow/1.0/publish-template')
-    expect((m.body as any).template.template_id).toBe('t')
+    expect(m.body.template.template_id).toBe('t')
   })
 })

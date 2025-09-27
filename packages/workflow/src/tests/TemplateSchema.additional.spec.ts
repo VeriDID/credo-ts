@@ -2,7 +2,7 @@ import { validateTemplateJson } from '..'
 
 describe('Schemas extra invalid cases', () => {
   test('invalid instance_policy (missing mode)', () => {
-    const bad: any = {
+    const bad = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -16,7 +16,7 @@ describe('Schemas extra invalid cases', () => {
   })
 
   test('transitions invalid item shape', () => {
-    const bad: any = {
+    const bad = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -30,7 +30,7 @@ describe('Schemas extra invalid cases', () => {
   })
 
   test('actions invalid profile_ref pattern rejected by schema', () => {
-    const bad: any = {
+    const bad = {
       template_id: 't',
       version: '1',
       title: 'T',
@@ -44,7 +44,7 @@ describe('Schemas extra invalid cases', () => {
   })
 
   test('sections invalid item (missing name)', () => {
-    const bad: any = {
+    const bad = {
       template_id: 't',
       version: '1',
       title: 'T',
