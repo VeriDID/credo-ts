@@ -1069,6 +1069,46 @@ importers:
         specifier: ~5.5.2
         version: 5.5.4
 
+  packages/workflow:
+    dependencies:
+      '@credo-ts/core':
+        specifier: workspace:*
+        version: link:../core
+      '@credo-ts/didcomm':
+        specifier: workspace:*
+        version: link:../didcomm
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
+      ajv-formats:
+        specifier: ^3.0.1
+        version: 3.0.1(ajv@8.17.1)
+      jmespath:
+        specifier: ^0.16.0
+        version: 0.16.0
+    devDependencies:
+      '@credo-ts/askar':
+        specifier: workspace:*
+        version: link:../askar
+      '@credo-ts/node':
+        specifier: workspace:*
+        version: link:../node
+      '@openwallet-foundation/askar-nodejs':
+        specifier: 'catalog:'
+        version: 0.4.0
+      '@types/jmespath':
+        specifier: ^0.15.2
+        version: 0.15.2
+      reflect-metadata:
+        specifier: 'catalog:'
+        version: 0.2.2
+      rimraf:
+        specifier: 'catalog:'
+        version: 6.0.1
+      typescript:
+        specifier: 'catalog:'
+        version: 5.8.3
+
   samples/extension-module:
     dependencies:
       '@credo-ts/askar':
@@ -3492,6 +3532,9 @@ packages:
 
   '@types/jest@30.0.0':
     resolution: {integrity: sha512-XTYugzhuwqWjws0CVz8QpM36+T+Dz5mTEBKhNs/esGLnCIlGdRy+Dq78NRjd7ls7r8BC8ZRMOrKlkO1hU0JOwA==}
+
+  '@types/jmespath@0.15.2':
+    resolution: {integrity: sha512-pegh49FtNsC389Flyo9y8AfkVIZn9MMPE9yJrO9svhq6Fks2MwymULWjZqySuxmctd3ZH4/n7Mr98D+1Qo5vGA==}
 
   '@types/keygrip@1.0.6':
     resolution: {integrity: sha512-lZuNAY9xeJt7Bx4t4dx0rYCDqGPW8RXhQZK1td7d4H6E9zYbLoOtjBvfwdTKpsyxQI/2jv+armjX/RW+ZNpXOQ==}
@@ -6068,6 +6111,10 @@ packages:
 
   jimp-compact@0.16.1:
     resolution: {integrity: sha512-dZ6Ra7u1G8c4Letq/B5EzAxj4tLFHL+cGtdpR+PVm4yzPDj+lCk+AbivWt1eOM+ikzkowtyV7qSqX6qr3t71Ww==}
+
+  jmespath@0.16.0:
+    resolution: {integrity: sha512-9FzQjJ7MATs1tSpnco1K6ayiYE3figslrXA72G2HQ/n76RzvYlofyi5QM+iX4YRs/pu3yzxlVQSST23+dMDknw==}
+    engines: {node: '>= 0.6.0'}
 
   joi@17.13.1:
     resolution: {integrity: sha512-vaBlIKCyo4FCUtCm7Eu4QZd/q02bWcxfUO6YSXAZOWF6gzcLBeba8kwotUdYJjDLW8Cz8RywsSOqiNJZW0mNvg==}
@@ -12158,6 +12205,8 @@ snapshots:
       expect: 30.0.3
       pretty-format: 30.0.2
 
+  '@types/jmespath@0.15.2': {}
+
   '@types/keygrip@1.0.6': {}
 
   '@types/koa-compose@3.2.8':
@@ -15271,6 +15320,8 @@ snapshots:
       - ts-node
 
   jimp-compact@0.16.1: {}
+
+  jmespath@0.16.0: {}
 
   joi@17.13.1:
     dependencies:
