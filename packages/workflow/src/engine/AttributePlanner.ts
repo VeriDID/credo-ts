@@ -1,3 +1,4 @@
+import jmespath from 'jmespath'
 import { AttributeSpec, WorkflowInstanceData } from '../model/types'
 
 const isObject = (v: any) => v && typeof v === 'object' && !Array.isArray(v)
@@ -13,7 +14,7 @@ export class AttributePlanner {
       } else if ((spec as any).source === 'static') {
         value = (spec as any).value
       } else if ((spec as any).source === 'compute') {
-        value = AttributePlanner.computeExpr((spec as any).expr)
+        value = AttributePlanner.computeExpr((spec as any).expr, instance)
       }
       if ((spec as any).required && (value === undefined || value === null || value === '')) {
         throw Object.assign(new Error('missing_attributes'), { code: 'missing_attributes', attribute: key })
@@ -27,15 +28,17 @@ export class AttributePlanner {
     return path.split('.').reduce((acc, part) => (acc == null ? undefined : acc[part]), obj)
   }
 
-  private static computeExpr(expr: string): any {
-    // Limited helpers: now(), concat(a,b,...)
-    const helpers = {
-      now: () => new Date().toISOString(),
-      concat: (...args: any[]) => args.map((a) => (a == null ? '' : String(a))).join(''),
+  private static computeExpr(expr: string, instance: WorkflowInstanceData): any {
+    // Evaluate compute expressions using JMESPath over a pure env
+    // Expose a stable 'now' value as an ISO string for this evaluation
+    const env = {
+      context: instance.context || {},
+      participants: instance.participants || {},
+      artifacts: instance.artifacts || {},
+      now: new Date().toISOString(),
     }
     try {
-      const fn = new Function('now', 'concat', `return ((${expr}));`)
-      return fn(helpers.now, helpers.concat)
+      return jmespath.search(env as any, expr)
     } catch {
       return undefined
     }

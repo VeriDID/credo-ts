@@ -5,7 +5,7 @@ describe('Engine helpers', () => {
     const plan: any = {
       a: { source: 'context', path: 'user.name', required: true },
       b: { source: 'static', value: 42 },
-      c: { source: 'compute', expr: 'concat("hi-", "there")' },
+      c: { source: 'compute', expr: "join('', ['hi-','there'])" },
     }
     const instance: any = { context: { user: { name: 'Alice' } } }
     const out = AttributePlanner.materialize(plan, instance)
