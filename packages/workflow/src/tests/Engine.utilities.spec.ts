@@ -20,19 +20,13 @@ describe('Engine helpers', () => {
 
   test('GuardEvaluator evalGuard with JMESPath truthy/falsey', () => {
     const env = { context: { a: 1, b: 0 }, participants: {}, artifacts: {} }
-    expect(GuardEvaluator.evalGuard('context.a', env as any, 'jmespath')).toBe(true)
-    expect(GuardEvaluator.evalGuard('context.b', env as any, 'jmespath')).toBe(false)
+    expect(GuardEvaluator.evalGuard('context.a', env as any)).toBe(true)
+    expect(GuardEvaluator.evalGuard('context.b', env as any)).toBe(false)
   })
 
   test('GuardEvaluator evalValue returns selected JSON piece', () => {
     const env = { context: { a: { x: 'ok' } }, participants: {}, artifacts: {} }
-    expect(GuardEvaluator.evalValue('context.a.x', env as any, 'jmespath')).toBe('ok')
-  })
-
-  test('GuardEvaluator JS engine evalGuard/evalValue', () => {
-    const env = { context: { a: 2 }, participants: {}, artifacts: {} }
-    expect(GuardEvaluator.evalGuard('context.a + 1 > 2', env as any, 'js')).toBe(true)
-    expect(GuardEvaluator.evalValue('context.a + 2', env as any, 'js')).toBe(4)
+    expect(GuardEvaluator.evalValue('context.a.x', env as any)).toBe('ok')
   })
 
   test('AttributePlanner compute error returns undefined unless required', () => {

@@ -8,30 +8,19 @@ export type GuardEnv = {
 }
 
 export class GuardEvaluator {
-  public static evalGuard(
-    expression: string | undefined,
-    env: GuardEnv,
-    engine: 'jmespath' | 'cel' | 'js' = 'jmespath'
-  ): boolean {
+  public static evalGuard(expression: string | undefined, env: GuardEnv): boolean {
     if (!expression) return true
     try {
-      if (engine === 'jmespath') {
-        const res = jmespath.search(env as any, expression)
-        return !!res
-      }
-      // fallback JS for dev
-      const fn = new Function('context', 'participants', 'artifacts', `return (${expression});`)
-      return !!fn(env.context, env.participants, env.artifacts)
+      const res = jmespath.search(env as any, expression)
+      return !!res
     } catch {
       return false
     }
   }
 
-  public static evalValue(expression: string, env: GuardEnv, engine: 'jmespath' | 'cel' | 'js' = 'jmespath'): any {
+  public static evalValue(expression: string, env: GuardEnv): any {
     try {
-      if (engine === 'jmespath') return jmespath.search(env as any, expression)
-      const fn = new Function('context', 'participants', 'artifacts', `return (${expression});`)
-      return fn(env.context, env.participants, env.artifacts)
+      return jmespath.search(env as any, expression)
     } catch {
       return undefined
     }

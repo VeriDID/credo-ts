@@ -198,7 +198,7 @@ export class WorkflowService {
     if (!candidates.length)
       throw this.problem('invalid_event', `no transition for event ${opts.event} from ${inst.state}`)
     const env = GuardEvaluator.envFromInstance(this.toInstanceData(inst))
-    const enabled = candidates.filter((t) => GuardEvaluator.evalGuard(t.guard, env, this.config.guardEngine))
+    const enabled = candidates.filter((t) => GuardEvaluator.evalGuard(t.guard, env))
     if (!enabled.length) throw this.problem('guard_failed', 'guard evaluated false')
     const t = enabled[0]
 
@@ -324,7 +324,7 @@ export class WorkflowService {
     const tpl = tplRec.template
     const env = GuardEvaluator.envFromInstance(this.toInstanceData(inst))
     const allowed = transitionsFromState(tpl, inst.state)
-      .filter((t) => GuardEvaluator.evalGuard(t.guard, env, this.config.guardEngine))
+      .filter((t) => GuardEvaluator.evalGuard(t.guard, env))
       .map((t) => t.on)
     const includeActions = opts.include_actions ?? true
     const includeUi = opts.include_ui ?? true
@@ -444,7 +444,7 @@ export class WorkflowService {
   private evalMultiplicity(expr: string, context: Record<string, unknown>): string {
     try {
       const env = { context, participants: {}, artifacts: {} }
-      const val = GuardEvaluator.evalValue(expr, env, this.config.guardEngine)
+      const val = GuardEvaluator.evalValue(expr, env)
       return val != null ? String(val) : ''
     } catch {
       return ''
