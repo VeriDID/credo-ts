@@ -1,4 +1,4 @@
-import { WorkflowService, WorkflowTemplateRecord } from '../src'
+import { WorkflowService, WorkflowTemplateRecord } from '..'
 
 describe('WorkflowService additional coverage', () => {
   const makeSvc = (overrides: any = {}) => {
@@ -100,7 +100,7 @@ describe('WorkflowService additional coverage', () => {
   test('start with invalid JS multiplicity_key results in empty multiplicityKeyValue', async () => {
     const { svc, instanceRepo } = makeSvc({ multiplicity_key: 'context.k', engine: 'js' })
     // Spy on GuardEvaluator.evalValue to throw to hit evalMultiplicity catch
-    const Guard = require('../src').GuardEvaluator
+    const Guard = require('..').GuardEvaluator
     jest.spyOn(Guard, 'evalValue').mockImplementation(() => {
       throw new Error('bang')
     })

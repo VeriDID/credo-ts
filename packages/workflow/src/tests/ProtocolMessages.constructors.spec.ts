@@ -5,7 +5,7 @@ import {
   PublishTemplateMessage,
   ResumeMessage,
   StatusMessage,
-} from '../src'
+} from '..'
 
 describe('Protocol messages constructors', () => {
   test('Pause/Resume/Cancel/Complete set type, body and thread', () => {

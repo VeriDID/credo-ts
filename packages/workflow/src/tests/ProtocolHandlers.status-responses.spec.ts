@@ -5,7 +5,7 @@ import {
   PauseHandler,
   ResumeHandler,
   WorkflowModuleConfig,
-} from '../src'
+} from '..'
 
 const ctx = () => ({
   dependencyManager: {

@@ -1,4 +1,4 @@
-import { PublishTemplateHandler } from '../src'
+import { PublishTemplateHandler } from '..'
 
 describe('PublishTemplateHandler success', () => {
   test('returns undefined on success (no outbound message)', async () => {

@@ -4,7 +4,7 @@ import {
   DidCommProofEventTypes,
   DidCommProofState,
 } from '@credo-ts/didcomm'
-import { WorkflowModule } from '../src'
+import { WorkflowModule } from '..'
 
 describe('WorkflowModule event mapping', () => {
   test('maps credential/proof events to workflow autoAdvance', async () => {

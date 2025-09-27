@@ -1,4 +1,4 @@
-import { CancelHandler, CompleteHandler, PauseHandler, ResumeHandler, WorkflowModuleConfig } from '../src'
+import { CancelHandler, CompleteHandler, PauseHandler, ResumeHandler, WorkflowModuleConfig } from '..'
 
 const makeCtx = () => ({
   dependencyManager: {

@@ -1,4 +1,4 @@
-import { AttributePlanner, GuardEvaluator } from '../src'
+import { AttributePlanner, GuardEvaluator } from '..'
 
 describe('Engine helpers', () => {
   test('AttributePlanner materialize: context/static/compute', () => {

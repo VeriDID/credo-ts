@@ -1,4 +1,4 @@
-import { WorkflowInstanceRepository } from '../src'
+import { WorkflowInstanceRepository } from '..'
 
 describe('WorkflowInstanceRepository helpers', () => {
   test('findLatestByConnection returns most recent by updatedAt/createdAt', async () => {

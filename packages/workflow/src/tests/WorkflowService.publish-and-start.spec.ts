@@ -1,4 +1,4 @@
-import { WorkflowInstanceRecord, WorkflowService, WorkflowTemplateRecord } from '../src'
+import { WorkflowInstanceRecord, WorkflowService, WorkflowTemplateRecord } from '..'
 
 describe('WorkflowService publishTemplate+start edge branches', () => {
   test('publishTemplate updates existing record (hash + template) and returns it', async () => {

@@ -1,4 +1,4 @@
-import { WorkflowService } from '../src'
+import { WorkflowService } from '..'
 
 describe('WorkflowService concurrency conflict', () => {
   test('advance throws state_conflict when state changed concurrently', async () => {

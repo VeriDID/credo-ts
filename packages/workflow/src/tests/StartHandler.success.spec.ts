@@ -1,4 +1,4 @@
-import { StartHandler } from '../src'
+import { StartHandler } from '..'
 
 describe('StartHandler success', () => {
   test('returns StatusMessage on success', async () => {

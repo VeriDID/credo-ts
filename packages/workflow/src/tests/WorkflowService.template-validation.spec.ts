@@ -1,4 +1,4 @@
-import { WorkflowService, validateTemplateJson } from '../src'
+import { WorkflowService, validateTemplateJson } from '..'
 
 describe('WorkflowService.validateTemplate (private)', () => {
   const make = () => {

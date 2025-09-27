@@ -1,4 +1,4 @@
-import { WorkflowTemplateRepository } from '../src'
+import { WorkflowTemplateRepository } from '..'
 
 describe('WorkflowTemplateRepository findByTemplateIdAndVersion', () => {
   test('chooses highest version when no version specified', async () => {

@@ -1,4 +1,4 @@
-import { validateTemplateJson } from '../src'
+import { validateTemplateJson } from '..'
 
 describe('Schemas extra invalid cases', () => {
   test('invalid instance_policy (missing mode)', () => {

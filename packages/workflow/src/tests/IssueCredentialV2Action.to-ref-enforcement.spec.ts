@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { IssueCredentialV2Action } from '../src'
+import { IssueCredentialV2Action } from '..'
 
 describe('to_ref recipient DID enforcement', () => {
   test('forbidden when theirDid mismatches participants[to_ref].did', async () => {

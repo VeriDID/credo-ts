@@ -1,4 +1,4 @@
-import { ProblemReportHandler, ProblemReportMessage } from '../src'
+import { ProblemReportHandler, ProblemReportMessage } from '..'
 
 describe('ProblemReportHandler', () => {
   test('logs and returns undefined', async () => {

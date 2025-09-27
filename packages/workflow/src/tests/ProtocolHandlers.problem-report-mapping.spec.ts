@@ -6,7 +6,7 @@ import {
   StatusHandler,
   StatusRequestMessage,
   WorkflowModuleConfig,
-} from '../src'
+} from '..'
 
 const makeAgentContext = () => ({
   dependencyManager: {

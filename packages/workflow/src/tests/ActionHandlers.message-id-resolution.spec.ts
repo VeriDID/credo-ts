@@ -1,4 +1,4 @@
-import { IssueCredentialV2Action, PresentProofV2Action } from '../src'
+import { IssueCredentialV2Action, PresentProofV2Action } from '..'
 
 const makeAgentContext = (mocks: any) => ({
   dependencyManager: {

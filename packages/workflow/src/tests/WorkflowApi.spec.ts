@@ -1,4 +1,4 @@
-import { WorkflowApi } from '../src'
+import { WorkflowApi } from '..'
 
 describe('WorkflowApi pass-through', () => {
   const make = () => {

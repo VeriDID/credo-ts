@@ -1,4 +1,4 @@
-import { WorkflowService } from '../src'
+import { WorkflowService } from '..'
 
 const makeSvc = (inst: any) => {
   const tpl: any = {

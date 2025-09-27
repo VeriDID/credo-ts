@@ -2,7 +2,7 @@ import { AskarModule } from '@credo-ts/askar'
 import { Agent, ConsoleLogger, LogLevel } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { askar } from '@openwallet-foundation/askar-nodejs'
-import { WorkflowModule } from '../src'
+import { WorkflowModule } from '..'
 
 const makeAgent = async () => {
   const agent = new Agent({

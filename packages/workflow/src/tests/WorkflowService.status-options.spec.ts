@@ -1,4 +1,4 @@
-import { WorkflowService } from '../src'
+import { WorkflowService } from '..'
 
 describe('WorkflowService.status include flags', () => {
   const make = () => {

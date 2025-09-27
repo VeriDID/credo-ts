@@ -1,4 +1,4 @@
-import { WorkflowInstanceRepository } from '../src'
+import { WorkflowInstanceRepository } from '..'
 
 describe('WorkflowInstanceRepository filters', () => {
   test('findByTemplateConnAndMultiplicity passes all filters', async () => {

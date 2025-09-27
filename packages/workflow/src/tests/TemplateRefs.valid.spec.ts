@@ -1,4 +1,4 @@
-import { validateTemplateRefs } from '../src'
+import { validateTemplateRefs } from '..'
 
 describe('validateTemplateRefs positive (cp.* and pp.*)', () => {
   test('cp.* and pp.* profile_ref resolve to catalog entries', () => {

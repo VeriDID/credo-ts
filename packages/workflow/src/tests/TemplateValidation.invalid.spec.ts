@@ -1,4 +1,4 @@
-import { validateTemplateJson, validateTemplateRefs } from '../src'
+import { validateTemplateJson, validateTemplateRefs } from '..'
 
 const baseTpl = {
   template_id: 't',

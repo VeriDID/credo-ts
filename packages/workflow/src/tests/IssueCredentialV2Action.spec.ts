@@ -1,4 +1,4 @@
-import { IssueCredentialV2Action } from '../src'
+import { IssueCredentialV2Action } from '..'
 
 describe('IssueCredentialV2Action', () => {
   test('missing profile and connection errors, and wraps thrown errors', async () => {

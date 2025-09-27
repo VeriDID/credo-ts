@@ -1,4 +1,4 @@
-import { validateTemplateJson } from '../src'
+import { validateTemplateJson } from '..'
 
 describe('schemas.ts more invalids', () => {
   test('transitions missing from', () => {

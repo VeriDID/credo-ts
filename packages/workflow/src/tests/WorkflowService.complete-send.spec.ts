@@ -1,4 +1,4 @@
-import { WorkflowService } from '../src'
+import { WorkflowService } from '..'
 
 const baseTpl: any = {
   template_id: 't',

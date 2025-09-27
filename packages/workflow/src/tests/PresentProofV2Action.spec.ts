@@ -1,4 +1,4 @@
-import { PresentProofV2Action } from '../src'
+import { PresentProofV2Action } from '..'
 
 describe('PresentProofV2Action', () => {
   test('builds predicates and wraps errors', async () => {

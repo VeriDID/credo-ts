@@ -1,4 +1,4 @@
-import { LocalStateSetAction } from '../src'
+import { LocalStateSetAction } from '..'
 
 describe('LocalStateSetAction', () => {
   test('merges static object', async () => {
