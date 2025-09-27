@@ -7,20 +7,23 @@ export type GuardEnv = {
   artifacts: Record<string, unknown>
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: Utility holder class for guard evaluation
 export class GuardEvaluator {
   public static evalGuard(expression: string | undefined, env: GuardEnv): boolean {
     if (!expression) return true
     try {
-      const res = jmespath.search(env as any, expression)
+      const jpSearch = jmespath.search as unknown as (obj: unknown, expr: string) => unknown
+      const res = jpSearch(env, expression)
       return !!res
     } catch {
       return false
     }
   }
 
-  public static evalValue(expression: string, env: GuardEnv): any {
+  public static evalValue(expression: string, env: GuardEnv): unknown {
     try {
-      return jmespath.search(env as any, expression)
+      const jpSearch = jmespath.search as unknown as (obj: unknown, expr: string) => unknown
+      return jpSearch(env, expression)
     } catch {
       return undefined
     }
