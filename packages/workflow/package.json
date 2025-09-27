@@ -1,0 +1,43 @@
+{
+  "name": "@credo-ts/workflow",
+  "main": "src/index",
+  "types": "src/index",
+  "version": "0.5.13",
+  "files": ["build"],
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "main": "build/index",
+    "types": "build/index",
+    "access": "public"
+  },
+  "homepage": "https://github.com/openwallet-foundation/credo-ts/tree/main/packages/workflow",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openwallet-foundation/credo-ts",
+    "directory": "packages/workflow"
+  },
+  "scripts": {
+    "build": "pnpm run clean && pnpm run compile",
+    "clean": "rimraf ./build",
+    "compile": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm run build",
+    "test": "jest",
+    "test:cov": "jest --coverage --runInBand"
+  },
+  "dependencies": {
+    "@credo-ts/core": "workspace:*",
+    "@credo-ts/didcomm": "workspace:*",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "jmespath": "^0.16.0"
+  },
+  "devDependencies": {
+    "@credo-ts/askar": "workspace:*",
+    "@credo-ts/node": "workspace:*",
+    "@openwallet-foundation/askar-nodejs": "catalog:",
+    "@types/jmespath": "^0.15.2",
+    "reflect-metadata": "catalog:",
+    "rimraf": "catalog:",
+    "typescript": "catalog:"
+  }
+}
