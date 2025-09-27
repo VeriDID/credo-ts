@@ -7,7 +7,7 @@ export type ActionCtx = {
   template: WorkflowTemplate
   instance: WorkflowInstanceData
   action: ActionDef
-  input?: any
+  input?: Record<string, unknown>
 }
 
 export type ActionResult = {
@@ -34,22 +34,26 @@ export class ActionRegistry {
 export class LocalStateSetAction implements WorkflowActionHandler {
   public readonly typeUri = 'https://didcomm.org/workflow/actions/state:set@1'
   public async execute(ctx: ActionCtx): Promise<ActionResult> {
-    const anyAct: any = ctx.action
-    const mergeObj = anyAct?.staticInput?.merge
-    if (mergeObj && typeof mergeObj === 'object') {
-      const next = deepMerge({ ...(ctx.instance.context || {}) }, mergeObj)
+    const mergeObj = (ctx.action as { staticInput?: unknown })?.staticInput as { merge?: unknown } | undefined | string
+    const mergeValue = typeof mergeObj === 'object' && mergeObj ? (mergeObj as { merge?: unknown }).merge : mergeObj
+    if (mergeValue && typeof mergeValue === 'object') {
+      const next = deepMerge({ ...(ctx.instance.context || {}) }, mergeValue as Record<string, unknown>)
       return { contextMerge: next }
     }
     // if string with template, try basic input resolution: '{{ input.form }}'
-    if (typeof mergeObj === 'string' && ctx.input && mergeObj.includes('input.')) {
+    if (typeof mergeValue === 'string' && ctx.input && mergeValue.includes('input.')) {
       try {
-        const path = mergeObj
+        const path = mergeValue
           .replace(/\{\{|\}\}/g, '')
           .trim()
           .replace(/^input\./, '')
-        const value = path.split('.').reduce((acc: any, p: string) => (acc == null ? undefined : acc[p]), ctx.input)
+        const value = path.split('.').reduce<unknown>((acc, p) => {
+          if (acc === null || acc === undefined) return undefined
+          if (typeof acc !== 'object') return undefined
+          return (acc as Record<string, unknown>)[p]
+        }, ctx.input)
         if (value && typeof value === 'object') {
-          const next = deepMerge({ ...(ctx.instance.context || {}) }, value)
+          const next = deepMerge({ ...(ctx.instance.context || {}) }, value as Record<string, unknown>)
           return { contextMerge: next }
         }
       } catch {}
@@ -61,7 +65,7 @@ export class LocalStateSetAction implements WorkflowActionHandler {
 export class IssueCredentialV2Action implements WorkflowActionHandler {
   public readonly typeUri = 'https://didcomm.org/issue-credential/2.0/offer-credential'
   public async execute(ctx: ActionCtx): Promise<ActionResult> {
-    const act: any = ctx.action
+    const act = ctx.action as { profile_ref: string }
     const ref: string = act.profile_ref
     if (!ref?.startsWith('cp.')) throw Object.assign(new Error('invalid profile_ref'), { code: 'action_error' })
     const key = ref.slice(3)
@@ -79,26 +83,36 @@ export class IssueCredentialV2Action implements WorkflowActionHandler {
         const {
           DidCommConnectionService,
         } = require('@credo-ts/didcomm/src/modules/connections/services/DidCommConnectionService')
-        const connSvc: any = ctx.agentContext.dependencyManager.resolve(DidCommConnectionService)
+        const connSvc = ctx.agentContext.dependencyManager.resolve(DidCommConnectionService) as import(
+          '@credo-ts/didcomm'
+        ).DidCommConnectionService
         const conn = await connSvc.getById(ctx.agentContext, ctx.instance.connection_id)
-        const theirDid = (conn as any)?.theirDid
+        const theirDid = (conn as unknown as { theirDid?: string })?.theirDid
         if (theirDid && theirDid !== expectedDid)
           throw Object.assign(new Error('to_ref DID mismatch'), { code: 'forbidden' })
       }
     }
     try {
       const { DidCommCredentialsApi } = require('@credo-ts/didcomm/src/modules/credentials/DidCommCredentialsApi')
-      const credsApi: any = ctx.agentContext.dependencyManager.resolve(DidCommCredentialsApi)
+      const credsApi = ctx.agentContext.dependencyManager.resolve(DidCommCredentialsApi) as unknown as {
+        offerCredential: (options: unknown) => Promise<{ id: string; credentialRecord?: { id?: string } }>
+        findOfferMessage: (id: string) => Promise<import('@credo-ts/didcomm').DidCommMessage | null>
+      }
       const record = await credsApi.offerCredential({
         connectionId,
         protocolVersion: 'v2',
         credentialFormats: { anoncreds: { credentialDefinitionId: profile.cred_def_id, attributes } },
         comment: profile.options?.comment,
-      } as any)
-      let messageId = record?.id || record?.credentialRecord?.id
+      })
+      let messageId: string | undefined = record?.id || record?.credentialRecord?.id
       try {
-        const found = await credsApi.findOfferMessage(messageId)
-        messageId = found?.message?.id || messageId
+        if (messageId) {
+          const found = (await credsApi.findOfferMessage(messageId)) as unknown
+          if (found && typeof found === 'object') {
+            const f = found as { id?: string; message?: { id?: string } }
+            messageId = f.message?.id || f.id || messageId
+          }
+        }
       } catch {}
       return { artifacts: { issueRecordId: record?.id || record?.credentialRecord?.id }, messageId }
     } catch (e) {
@@ -110,7 +124,7 @@ export class IssueCredentialV2Action implements WorkflowActionHandler {
 export class PresentProofV2Action implements WorkflowActionHandler {
   public readonly typeUri = 'https://didcomm.org/present-proof/2.0/request-presentation'
   public async execute(ctx: ActionCtx): Promise<ActionResult> {
-    const act: any = ctx.action
+    const act = ctx.action as { profile_ref: string }
     const ref: string = act.profile_ref
     if (!ref?.startsWith('pp.')) throw Object.assign(new Error('invalid profile_ref'), { code: 'action_error' })
     const key = ref.slice(3)
@@ -126,30 +140,41 @@ export class PresentProofV2Action implements WorkflowActionHandler {
         const {
           DidCommConnectionService,
         } = require('@credo-ts/didcomm/src/modules/connections/services/DidCommConnectionService')
-        const connSvc: any = ctx.agentContext.dependencyManager.resolve(DidCommConnectionService)
+        const connSvc = ctx.agentContext.dependencyManager.resolve(DidCommConnectionService) as import(
+          '@credo-ts/didcomm'
+        ).DidCommConnectionService
         const conn = await connSvc.getById(ctx.agentContext, ctx.instance.connection_id)
-        const theirDid = (conn as any)?.theirDid
+        const theirDid = (conn as unknown as { theirDid?: string })?.theirDid
         if (theirDid && theirDid !== expectedDid2)
           throw Object.assign(new Error('to_ref DID mismatch'), { code: 'forbidden' })
       }
     }
     try {
       const { DidCommProofsApi } = require('@credo-ts/didcomm/src/modules/proofs/DidCommProofsApi')
-      const proofsApi: any = ctx.agentContext.dependencyManager.resolve(DidCommProofsApi)
-      const credDefId = (profile as any).cred_def_id
-      const schemaId = (profile as any).schema_id
+      const proofsApi = ctx.agentContext.dependencyManager.resolve(DidCommProofsApi) as unknown as {
+        requestProof: (options: unknown) => Promise<{ id: string; proofRecord?: { id?: string } }>
+        findRequestMessage: (id: string) => Promise<import('@credo-ts/didcomm').DidCommMessage | null>
+      }
+      const credDefId = (profile as { cred_def_id?: string }).cred_def_id
+      const schemaId = (profile as { schema_id?: string }).schema_id
       const restriction = credDefId ? { cred_def_id: credDefId } : schemaId ? { schema_id: schemaId } : undefined
 
-      const reqAttrs = (profile.requested_attributes || []).reduce((acc: any, name: string, idx: number) => {
-        acc[`attr${idx + 1}`] = restriction ? { name, restrictions: [restriction] } : { name }
-        return acc
-      }, {})
-      const reqPreds = (profile.requested_predicates || []).reduce((acc: any, p: any, idx: number) => {
-        acc[`pred${idx + 1}`] = restriction
-          ? { name: p.name, p_type: p.p_type, p_value: p.p_value, restrictions: [restriction] }
-          : { name: p.name, p_type: p.p_type, p_value: p.p_value }
-        return acc
-      }, {})
+      const reqAttrs = (profile.requested_attributes || []).reduce<Record<string, unknown>>(
+        (acc, name: string, idx: number) => {
+          acc[`attr${idx + 1}`] = restriction ? { name, restrictions: [restriction] } : { name }
+          return acc
+        },
+        {}
+      )
+      const reqPreds = (profile.requested_predicates || []).reduce<Record<string, unknown>>(
+        (acc, p: { name: string; p_type: string; p_value: number }, idx: number) => {
+          acc[`pred${idx + 1}`] = restriction
+            ? { name: p.name, p_type: p.p_type, p_value: p.p_value, restrictions: [restriction] }
+            : { name: p.name, p_type: p.p_type, p_value: p.p_value }
+          return acc
+        },
+        {}
+      )
       const record = await proofsApi.requestProof({
         connectionId,
         protocolVersion: 'v2',
@@ -163,11 +188,16 @@ export class PresentProofV2Action implements WorkflowActionHandler {
         },
         willConfirm: true,
         comment: profile.options?.comment,
-      } as any)
-      let messageId = record?.id || record?.proofRecord?.id
+      })
+      let messageId: string | undefined = record?.id || record?.proofRecord?.id
       try {
-        const found = await proofsApi.findRequestMessage(messageId)
-        messageId = found?.message?.id || messageId
+        if (messageId) {
+          const found = (await proofsApi.findRequestMessage(messageId)) as unknown
+          if (found && typeof found === 'object') {
+            const f = found as { id?: string; message?: { id?: string } }
+            messageId = f.message?.id || f.id || messageId
+          }
+        }
       } catch {}
       return { artifacts: { proofRecordId: record?.id || record?.proofRecord?.id }, messageId }
     } catch (e) {

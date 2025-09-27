@@ -13,7 +13,7 @@ export class StatusMessage extends DidCommMessage {
     allowed_events: string[]
     action_menu: Array<{ label?: string; event: string }>
     artifacts: Record<string, unknown>
-    ui?: any[]
+    ui?: import('../../model/types').UiItem[]
   }
 
   public constructor(options?: { id?: string; body: StatusMessage['body']; thid?: string }) {

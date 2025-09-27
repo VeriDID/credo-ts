@@ -1,4 +1,12 @@
-import { EventEmitter, InjectionSymbols, Repository, StorageService, inject, injectable } from '@credo-ts/core'
+import {
+  AgentContext,
+  EventEmitter,
+  InjectionSymbols,
+  Repository,
+  StorageService,
+  inject,
+  injectable,
+} from '@credo-ts/core'
 import { WorkflowTemplateRecord } from './WorkflowTemplateRecord'
 
 @injectable()
@@ -10,7 +18,7 @@ export class WorkflowTemplateRepository extends Repository<WorkflowTemplateRecor
     super(WorkflowTemplateRecord, storageService, eventEmitter)
   }
 
-  public async findByTemplateIdAndVersion(agentContext: any, templateId: string, version?: string) {
+  public async findByTemplateIdAndVersion(agentContext: AgentContext, templateId: string, version?: string) {
     const list = await this.findByQuery(agentContext, { templateId, ...(version ? { version } : {}) })
     if (!list?.length) return null
     if (version) return list[0]

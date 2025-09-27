@@ -31,14 +31,14 @@ export class PauseHandler implements DidCommMessageHandler {
         connection: messageContext.connection,
       })
     } catch (e) {
-      if ((e as any)?.code === 'invalid_event') {
+      if ((e as { code?: string })?.code === 'invalid_event') {
         logger.info('[Workflow] pause ignored (no local instance)', { instance_id: instId })
         return undefined
       }
       if (config.enableProblemReport && messageContext.connection) {
         const pr = new ProblemReportMessage({
           thid: messageContext.message.threadId || messageContext.message.id,
-          body: { code: (e as any).code || 'action_error', comment: (e as Error).message },
+          body: { code: (e as { code?: string }).code || 'action_error', comment: (e as Error).message },
         })
         return new DidCommOutboundMessageContext(pr, {
           agentContext: messageContext.agentContext,

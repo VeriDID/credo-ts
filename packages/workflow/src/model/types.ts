@@ -45,10 +45,17 @@ export type Catalog = {
 
 export type ActionDef =
   | { key: string; typeURI: string; profile_ref: string }
-  | { key: string; typeURI: string; staticInput?: any }
+  | { key: string; typeURI: string; staticInput?: unknown }
+
+export type UiItem = {
+  type?: string
+  label?: string
+  event?: string
+  [key: string]: unknown
+}
 
 export type DisplayHints = {
-  states?: Record<string, any[]>
+  states?: Record<string, UiItem[]>
 }
 
 export type WorkflowTemplate = {
@@ -83,8 +90,8 @@ export type WorkflowInstanceData = {
   participants: Participants
   state: string
   section?: string
-  context: Record<string, any>
-  artifacts: Record<string, any>
+  context: Record<string, unknown>
+  artifacts: Record<string, unknown>
   status: 'active' | 'paused' | 'canceled' | 'completed' | 'error'
   history: InstanceHistoryItem[]
   multiplicityKeyValue?: string

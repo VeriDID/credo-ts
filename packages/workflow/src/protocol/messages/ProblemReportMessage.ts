@@ -6,7 +6,7 @@ export class ProblemReportMessage extends DidCommMessage {
   @IsValidMessageType(ProblemReportMessage.type)
   public type = ProblemReportMessage.type.messageTypeUri
 
-  public body!: { code: string; comment?: string; args?: any }
+  public body!: { code: string; comment?: string; args?: Record<string, unknown> }
 
   public constructor(options?: { id?: string; body: ProblemReportMessage['body']; thid?: string }) {
     super()

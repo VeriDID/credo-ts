@@ -41,7 +41,7 @@ export class AdvanceHandler implements DidCommMessageHandler {
       if (config.enableProblemReport && messageContext.connection) {
         const pr = new ProblemReportMessage({
           thid: messageContext.message.threadId || messageContext.message.id,
-          body: { code: (e as any).code || 'action_error', comment: (e as Error).message },
+          body: { code: (e as { code?: string }).code || 'action_error', comment: (e as Error).message },
         })
         return new DidCommOutboundMessageContext(pr, {
           agentContext: messageContext.agentContext,

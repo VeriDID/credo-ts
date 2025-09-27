@@ -14,12 +14,13 @@ export interface WorkflowInstanceRecordProps {
   participants: Participants
   state: string
   section?: string
-  context: Record<string, any>
-  artifacts: Record<string, any>
+  context: Record<string, unknown>
+  artifacts: Record<string, unknown>
   status: WorkflowInstanceStatus
   history: InstanceHistoryItem[]
   multiplicityKeyValue?: string
   idempotencyKeys?: string[]
+  idempotency?: Array<{ key: string; event: string; to: string; actionKey?: string }>
   tags?: TagsBase
 }
 
@@ -43,8 +44,8 @@ export class WorkflowInstanceRecord
   public participants!: Participants
   public state!: string
   public section?: string
-  public context!: Record<string, any>
-  public artifacts!: Record<string, any>
+  public context!: Record<string, unknown>
+  public artifacts!: Record<string, unknown>
   public status!: WorkflowInstanceStatus
   public history!: InstanceHistoryItem[]
   public multiplicityKeyValue?: string
@@ -72,7 +73,7 @@ export class WorkflowInstanceRecord
       this.history = props.history ?? []
       this.multiplicityKeyValue = props.multiplicityKeyValue
       this.idempotencyKeys = props.idempotencyKeys ?? []
-      this.idempotency = (props as any).idempotency ?? []
+      this.idempotency = props.idempotency ?? []
       this._tags = props.tags ?? {}
     }
   }

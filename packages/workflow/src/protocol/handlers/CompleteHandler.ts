@@ -28,14 +28,14 @@ export class CompleteHandler implements DidCommMessageHandler {
       })
     } catch (e) {
       // If the receiving agent doesn't host the instance, ignore silently (no problem-report)
-      if ((e as any)?.code === 'invalid_event') {
+      if ((e as { code?: string })?.code === 'invalid_event') {
         logger.info('[Workflow] complete ignored (no local instance)', { instance_id: instId })
         return undefined
       }
       if (config.enableProblemReport && messageContext.connection) {
         const pr = new ProblemReportMessage({
           thid,
-          body: { code: (e as any).code || 'action_error', comment: (e as Error).message },
+          body: { code: (e as { code?: string }).code || 'action_error', comment: (e as Error).message },
         })
         return new DidCommOutboundMessageContext(pr, {
           agentContext: messageContext.agentContext,

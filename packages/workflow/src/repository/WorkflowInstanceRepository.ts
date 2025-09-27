@@ -1,4 +1,12 @@
-import { EventEmitter, InjectionSymbols, Repository, StorageService, inject, injectable } from '@credo-ts/core'
+import {
+  AgentContext,
+  EventEmitter,
+  InjectionSymbols,
+  Repository,
+  StorageService,
+  inject,
+  injectable,
+} from '@credo-ts/core'
 import { WorkflowInstanceRecord } from './WorkflowInstanceRecord'
 
 @injectable()
@@ -10,12 +18,12 @@ export class WorkflowInstanceRepository extends Repository<WorkflowInstanceRecor
     super(WorkflowInstanceRecord, storageService, eventEmitter)
   }
 
-  public async findByTemplateAndConnection(agentContext: any, templateId: string, connectionId?: string) {
+  public async findByTemplateAndConnection(agentContext: AgentContext, templateId: string, connectionId?: string) {
     return this.findByQuery(agentContext, { templateId, ...(connectionId ? { connectionId } : {}) })
   }
 
   public async findByTemplateConnAndMultiplicity(
-    agentContext: any,
+    agentContext: AgentContext,
     templateId: string,
     connectionId: string | undefined,
     multiplicityKeyValue: string
@@ -27,11 +35,11 @@ export class WorkflowInstanceRepository extends Repository<WorkflowInstanceRecor
     })
   }
 
-  public async findByConnection(agentContext: any, connectionId: string) {
+  public async findByConnection(agentContext: AgentContext, connectionId: string) {
     return this.findByQuery(agentContext, { connectionId })
   }
 
-  public async findLatestByConnection(agentContext: any, connectionId: string) {
+  public async findLatestByConnection(agentContext: AgentContext, connectionId: string) {
     const list = await this.findByConnection(agentContext, connectionId)
     if (!list?.length) return null
     return list.sort(
@@ -41,7 +49,7 @@ export class WorkflowInstanceRepository extends Repository<WorkflowInstanceRecor
     )[0]
   }
 
-  public async getByInstanceId(agentContext: any, instanceId: string) {
+  public async getByInstanceId(agentContext: AgentContext, instanceId: string) {
     return this.findSingleByQuery(agentContext, { instanceId })
   }
 }

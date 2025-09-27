@@ -30,7 +30,7 @@ export class WorkflowApi {
     instance_id: string
     event: string
     idempotency_key?: string
-    input?: any
+    input?: Record<string, unknown>
   }): Promise<WorkflowInstanceRecord> {
     return this.service.advance(this.agentContext, opts)
   }
@@ -42,7 +42,7 @@ export class WorkflowApi {
     allowed_events: string[]
     action_menu: Array<{ label?: string; event: string }>
     artifacts: Record<string, unknown>
-    ui?: any[]
+    ui?: import('../model/types').UiItem[]
   }> {
     return this.service.status(this.agentContext, opts)
   }

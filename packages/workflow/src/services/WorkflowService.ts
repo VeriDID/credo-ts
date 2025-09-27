@@ -20,9 +20,12 @@ import { WorkflowInstanceRepository } from '../repository/WorkflowInstanceReposi
 import { WorkflowTemplateRecord } from '../repository/WorkflowTemplateRecord'
 import { WorkflowTemplateRepository } from '../repository/WorkflowTemplateRepository'
 
-const stableStringify = (obj: any): string => {
+const stableStringify = (obj: unknown): string => {
   const allKeys: string[] = []
-  JSON.stringify(obj, (k, v) => (allKeys.push(k), v))
+  JSON.stringify(obj, (k, v) => {
+    allKeys.push(k)
+    return v
+  })
   allKeys.sort()
   return JSON.stringify(obj, allKeys)
 }
@@ -52,7 +55,7 @@ export class WorkflowService {
     template: WorkflowTemplate
   ): Promise<WorkflowTemplateRecord> {
     // JSON schema validation + structural checks
-    validateTemplateJson(template as any)
+    validateTemplateJson(template)
     validateTemplateRefs(template)
     const hash = sha256(stableStringify(template))
     const existing = await this.templateRepo.findByTemplateIdAndVersion(
@@ -163,7 +166,7 @@ export class WorkflowService {
       instance_id: string
       event: string
       idempotency_key?: string
-      input?: any
+      input?: Record<string, unknown>
     }
   ): Promise<WorkflowInstanceRecord> {
     let inst: WorkflowInstanceRecord
@@ -189,7 +192,7 @@ export class WorkflowService {
 
     // idempotency
     if (opts.idempotency_key && inst.idempotencyKeys?.includes(opts.idempotency_key)) {
-      const prior = (inst as any).idempotency?.find?.((i: any) => i.key === opts.idempotency_key)
+      const prior = inst.idempotency?.find?.((i) => i.key === opts.idempotency_key)
       if (prior && prior.event !== opts.event) throw this.problem('idempotency_conflict', 'same key, different event')
       return inst
     }
@@ -246,8 +249,8 @@ export class WorkflowService {
     inst.artifacts = { ...inst.artifacts, ...artifactsDelta }
     if (opts.idempotency_key) {
       inst.idempotencyKeys = [...(inst.idempotencyKeys || []), opts.idempotency_key]
-      ;(inst as any).idempotency = [
-        ...((inst as any).idempotency || []),
+      inst.idempotency = [
+        ...(inst.idempotency || []),
         { key: opts.idempotency_key, event: opts.event, to: t.to, actionKey: t.action },
       ]
     }
@@ -305,7 +308,7 @@ export class WorkflowService {
     allowed_events: string[]
     action_menu: Array<{ label?: string; event: string }>
     artifacts: Record<string, unknown>
-    ui?: any[]
+    ui?: import('../model/types').UiItem[]
   }> {
     let inst: WorkflowInstanceRecord
     try {
@@ -328,12 +331,13 @@ export class WorkflowService {
       .map((t) => t.on)
     const includeActions = opts.include_actions ?? true
     const includeUi = opts.include_ui ?? true
+    const uiItems = ensureArray<import('../model/types').UiItem>(tpl.display_hints?.states?.[inst.state])
     const menu = includeActions
-      ? ensureArray(tpl.display_hints?.states?.[inst.state])
+      ? uiItems
           .filter((i) => i?.type === 'button' || i?.type === 'submit-button')
-          .map((i) => ({ label: i?.label, event: i?.event }))
+          .map((i) => ({ label: i?.label, event: i?.event as string }))
       : []
-    const ui = includeUi ? ensureArray(tpl.display_hints?.states?.[inst.state]) : undefined
+    const ui = includeUi ? uiItems : undefined
     return {
       instance_id: inst.instanceId,
       state: inst.state,
@@ -470,8 +474,8 @@ export class WorkflowService {
   }
 
   private problem(code: string, comment: string) {
-    const err = new Error(comment)
-    ;(err as any).code = code
+    const err = new Error(comment) as Error & { code: string }
+    err.code = code
     return err
   }
 
@@ -510,8 +514,8 @@ export class WorkflowService {
     }
     // profile_ref resolution
     for (const a of t.actions) {
-      if ('profile_ref' in a && (a as any).profile_ref) {
-        const pr = (a as any).profile_ref as string
+      if ('profile_ref' in a && (a as { profile_ref: string }).profile_ref) {
+        const pr = (a as { profile_ref: string }).profile_ref
         if (pr.startsWith('cp.')) {
           const key = pr.slice(3)
           if (!t.catalog?.credential_profiles || !t.catalog.credential_profiles[key]) fail(`catalog.cp missing: ${key}`)
@@ -533,7 +537,7 @@ export class WorkflowService {
         thid: inst.instanceId,
         body: { instance_id: inst.instanceId, reason: 'state_final' },
       })
-      const outbound = new DidCommOutboundMessageContext(msg as any, { agentContext, connection })
+      const outbound = new DidCommOutboundMessageContext(msg, { agentContext, connection })
       await messageSender.sendMessage(outbound)
     } catch (e) {
       this.agentConfig.logger.debug(`Workflow complete notify error: ${(e as Error).message}`)
