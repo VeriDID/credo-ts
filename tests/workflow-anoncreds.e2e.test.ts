@@ -3,15 +3,26 @@ import type { SubjectMessage } from './transport/SubjectInboundTransport'
 import { Subject } from 'rxjs'
 
 import { getAnonCredsModules } from '../packages/anoncreds/tests/anoncredsSetup'
+import {
+  anoncredsDefinitionFourAttributesNoRevocation,
+  storePreCreatedAnonCredsDefinition,
+} from '../packages/anoncreds/tests/preCreatedAnonCredsDefinition'
 import { getAgentOptions, makeConnection } from '../packages/core/tests/helpers'
-import { anoncredsDefinitionFourAttributesNoRevocation, storePreCreatedAnonCredsDefinition } from '../packages/anoncreds/tests/preCreatedAnonCredsDefinition'
 import { SubjectInboundTransport } from './transport/SubjectInboundTransport'
 import { SubjectOutboundTransport } from './transport/SubjectOutboundTransport'
 
 import { Agent } from '@credo-ts/core'
-import { DidCommAutoAcceptCredential, DidCommMessageSender, DidCommOutboundMessageContext, DidCommCredentialsApi, DidCommCredentialState } from '@credo-ts/didcomm'
+import {
+  DidCommAutoAcceptCredential,
+  DidCommCredentialState,
+  DidCommCredentialsApi,
+  DidCommMessageSender,
+  DidCommOutboundMessageContext,
+} from '@credo-ts/didcomm'
 import { WorkflowModule } from '../packages/workflow/src'
 import { AdvanceMessage } from '../packages/workflow/src'
+import type { WorkflowApi } from '../packages/workflow/src'
+import type { UiItem } from '../packages/workflow/src/model/types'
 
 describe('Workflow AnonCreds E2E with UI and holder confirmation', () => {
   let issuerAgent: Agent
@@ -67,7 +78,7 @@ describe('Workflow AnonCreds E2E with UI and holder confirmation', () => {
 
     // Prepare pre-created anoncreds def
     const { credentialDefinitionId } = await storePreCreatedAnonCredsDefinition(
-      issuerAgent as any,
+      issuerAgent,
       anoncredsDefinitionFourAttributesNoRevocation
     )
 
@@ -83,20 +94,25 @@ describe('Workflow AnonCreds E2E with UI and holder confirmation', () => {
       { type: 'button', label: 'Save', event: 'save' },
       { type: 'submit-button', label: 'Confirm', event: 'request_confirm' },
     ]
-    const tpl = {
+    const tpl: import('../packages/workflow/src').WorkflowTemplate = {
       template_id: 'ui-flow',
       version: '1.0.0',
       title: 'Workflow UI and Issue',
-      instance_policy: { mode: 'singleton_per_connection' },
+      instance_policy: { mode: 'singleton_per_connection' as const },
       sections: [{ name: 'Main' }],
       states: [
-        { name: 'menu', type: 'start', section: 'Main' },
-        { name: 'confirm', type: 'normal', section: 'Main' },
-        { name: 'done', type: 'final', section: 'Main' },
+        { name: 'menu', type: 'start' as const, section: 'Main' },
+        { name: 'confirm', type: 'normal' as const, section: 'Main' },
+        { name: 'done', type: 'final' as const, section: 'Main' },
       ],
       transitions: [
         { from: 'menu', to: 'menu', on: 'save', action: 'state_save_form' },
-        { from: 'menu', to: 'confirm', on: 'request_confirm', guard: 'context.name && context.age && context.agree && context.country' },
+        {
+          from: 'menu',
+          to: 'confirm',
+          on: 'request_confirm',
+          guard: 'context.name && context.age && context.agree && context.country',
+        },
         { from: 'confirm', to: 'done', on: 'confirm_accept', action: 'offer_name_cred' },
       ],
       catalog: {
@@ -114,15 +130,32 @@ describe('Workflow AnonCreds E2E with UI and holder confirmation', () => {
         },
       },
       actions: [
-        { key: 'state_save_form', typeURI: 'https://didcomm.org/workflow/actions/state:set@1', staticInput: { merge: '{{ input.form }}' } },
-        { key: 'offer_name_cred', typeURI: 'https://didcomm.org/issue-credential/2.0/offer-credential', profile_ref: 'cp.demo' },
+        {
+          key: 'state_save_form',
+          typeURI: 'https://didcomm.org/workflow/actions/state:set@1',
+          staticInput: { merge: '{{ input.form }}' },
+        },
+        {
+          key: 'offer_name_cred',
+          typeURI: 'https://didcomm.org/issue-credential/2.0/offer-credential',
+          profile_ref: 'cp.demo',
+        },
       ],
-      display_hints: { states: { menu: ui, confirm: [{ type: 'text', text: 'Please confirm your details.' }, { type: 'submit-button', label: 'Accept', event: 'confirm_accept' }] } },
+      display_hints: {
+        states: {
+          menu: ui,
+          confirm: [
+            { type: 'text', text: 'Please confirm your details.' },
+            { type: 'submit-button', label: 'Accept', event: 'confirm_accept' },
+          ],
+        },
+      },
     }
-    await (issuerAgent.modules as any).workflow.publishTemplate(tpl)
+    const issuerWorkflow = (issuerAgent.modules as unknown as { workflow: WorkflowApi }).workflow
+    await issuerWorkflow.publishTemplate(tpl)
 
     // Start instance on issuer, scoped to connection and participants
-    const inst = await (issuerAgent.modules as any).workflow.start({
+    const inst = await issuerWorkflow.start({
       template_id: 'ui-flow',
       connection_id: issuerConn.id,
       participants: { holder: { did: issuerConn.theirDid as string } },
@@ -130,53 +163,75 @@ describe('Workflow AnonCreds E2E with UI and holder confirmation', () => {
     })
 
     // Status returns UI and action menu
-    const s1 = await (issuerAgent.modules as any).workflow.status({ instance_id: inst.instanceId, include_ui: true })
+    const s1 = await issuerWorkflow.status({ instance_id: inst.instanceId, include_ui: true })
     expect(s1.state).toBe('menu')
     // UI items - various types
-    expect(s1.ui?.find((i: any) => i.type === 'text')?.text).toContain('Enter your details')
-    expect(s1.ui?.find((i: any) => i.type === 'image')?.url).toContain('banner.png')
-    expect(s1.ui?.find((i: any) => i.type === 'video')?.url).toContain('intro.mp4')
-    expect(s1.ui?.find((i: any) => i.type === 'input' && i.name === 'name')?.label).toBe('Full Name')
-    expect(s1.ui?.find((i: any) => i.type === 'input' && i.name === 'age')?.label).toBe('Age')
-    expect(s1.ui?.find((i: any) => i.type === 'check-box')?.label).toBe('I agree')
-    expect(s1.ui?.find((i: any) => i.type === 'drop-down')?.options).toEqual(expect.arrayContaining(['US', 'CA']))
+    const ui1: UiItem[] = s1.ui ?? []
+    expect(ui1.find((i: UiItem) => i.type === 'text')?.text).toContain('Enter your details')
+    expect(ui1.find((i: UiItem) => i.type === 'image')?.url).toContain('banner.png')
+    expect(ui1.find((i: UiItem) => i.type === 'video')?.url).toContain('intro.mp4')
+    expect(ui1.find((i: UiItem) => i.type === 'input' && i.name === 'name')?.label).toBe('Full Name')
+    expect(ui1.find((i: UiItem) => i.type === 'input' && i.name === 'age')?.label).toBe('Age')
+    expect(ui1.find((i: UiItem) => i.type === 'check-box')?.label).toBe('I agree')
+    expect(ui1.find((i: UiItem) => i.type === 'drop-down')?.options).toEqual(expect.arrayContaining(['US', 'CA']))
     // Buttons
-    expect(s1.action_menu).toEqual(expect.arrayContaining([{ label: 'Save', event: 'save' }, { label: 'Confirm', event: 'request_confirm' }]))
+    expect(s1.action_menu).toEqual(
+      expect.arrayContaining([
+        { label: 'Save', event: 'save' },
+        { label: 'Confirm', event: 'request_confirm' },
+      ])
+    )
 
     // Submit fields via save event
-    await (issuerAgent.modules as any).workflow.advance({ instance_id: inst.instanceId, event: 'save', idempotency_key: 'k1', input: { form: { name: 'Alice', age: 30, agree: true, country: 'US' } } })
-    const sAfterSave = await (issuerAgent.modules as any).workflow.status({ instance_id: inst.instanceId, include_ui: false })
+    await issuerWorkflow.advance({
+      instance_id: inst.instanceId,
+      event: 'save',
+      idempotency_key: 'k1',
+      input: { form: { name: 'Alice', age: 30, agree: true, country: 'US' } },
+    })
+    const _sAfterSave = await issuerWorkflow.status({ instance_id: inst.instanceId, include_ui: false })
 
     // Now request_confirm becomes allowed
-    const s2 = await (issuerAgent.modules as any).workflow.status({ instance_id: inst.instanceId })
+    const s2 = await issuerWorkflow.status({ instance_id: inst.instanceId })
     expect(s2.allowed_events).toContain('request_confirm')
 
     // Issuer requests confirmation (moves to 'confirm')
-    await (issuerAgent.modules as any).workflow.advance({ instance_id: inst.instanceId, event: 'request_confirm', idempotency_key: 'k2' })
-    const sConfirm = await (issuerAgent.modules as any).workflow.status({ instance_id: inst.instanceId })
+    await issuerWorkflow.advance({ instance_id: inst.instanceId, event: 'request_confirm', idempotency_key: 'k2' })
+    const _sConfirm = await issuerWorkflow.status({ instance_id: inst.instanceId })
 
     // Holder would confirm. For deterministic e2e, advance on issuer side
     // Holder confirms by sending Advance DIDComm message to issuer
     const sender = holderAgent.dependencyManager.resolve(DidCommMessageSender)
-    const msg = new AdvanceMessage({ thid: inst.instanceId, body: { instance_id: inst.instanceId, event: 'confirm_accept' } })
-    const outbound = new DidCommOutboundMessageContext(msg as any, { agentContext: (holderAgent as any).context, connection: holderConn as any })
+    const msg = new AdvanceMessage({
+      thid: inst.instanceId,
+      body: { instance_id: inst.instanceId, event: 'confirm_accept' },
+    })
+    const outbound = new DidCommOutboundMessageContext(msg, {
+      agentContext: holderAgent.context,
+      connection: holderConn,
+    })
     await sender.sendMessage(outbound)
 
     // Wait for holder to receive the offer explicitly, then accept
     const holderOffer = await waitForHolderOffer(holderAgent)
-    await (holderAgent.modules as any).credentials.acceptOffer({ credentialExchangeRecordId: holderOffer.id, autoAcceptCredential: 2 })
+    const holderCreds = holderAgent.dependencyManager.resolve(DidCommCredentialsApi)
+    await holderCreds.acceptOffer({ credentialExchangeRecordId: holderOffer.id })
     // Wait until both sides have Done
     await waitForCredentialDone(issuerAgent)
     await waitForCredentialDone(holderAgent)
 
     // Verify offer attributes contained the submitted values
-    const statusAfter = await (issuerAgent.modules as any).workflow.status({ instance_id: inst.instanceId })
-    const issueRecordId: string = (statusAfter as any).artifacts?.issueRecordId
+    const statusAfter = await issuerWorkflow.status({ instance_id: inst.instanceId })
+    const issueRecordId = statusAfter.artifacts?.issueRecordId as string
     expect(issueRecordId).toBeTruthy()
     const creds = issuerAgent.dependencyManager.resolve(DidCommCredentialsApi)
     const fmt = await creds.getFormatData(issueRecordId)
-    const nameAttr = fmt.offerAttributes?.find((a: any) => a.name === 'name')
-    const ageAttr = fmt.offerAttributes?.find((a: any) => a.name === 'age')
+    const nameAttr = (fmt.offerAttributes as Array<{ name: string; value: string }> | undefined)?.find(
+      (a) => a.name === 'name'
+    )
+    const ageAttr = (fmt.offerAttributes as Array<{ name: string; value: string }> | undefined)?.find(
+      (a) => a.name === 'age'
+    )
     expect(nameAttr?.value).toBe('Alice')
     expect(ageAttr?.value).toBe('30')
   })
@@ -187,7 +242,7 @@ async function waitForCredentialDone(agent: Agent, { timeoutMs = 10000, interval
   const creds = agent.dependencyManager.resolve(DidCommCredentialsApi)
   while (Date.now() - start < timeoutMs) {
     const all = await creds.getAll()
-    if (all.some((r) => (r as any).state === DidCommCredentialState.Done)) return
+    if (all.some((r) => (r.state as unknown as string) === DidCommCredentialState.Done)) return
     await new Promise((r) => setTimeout(r, intervalMs))
   }
   throw new Error('Timeout waiting for credential to reach Done state')
@@ -198,7 +253,7 @@ async function waitForHolderOffer(agent: Agent, { timeoutMs = 10000, intervalMs 
   const creds = agent.dependencyManager.resolve(DidCommCredentialsApi)
   while (Date.now() - start < timeoutMs) {
     const all = await creds.getAll()
-    const rec = all.find((r: any) => r.state === 'offer-received')
+    const rec = all.find((r) => (r.state as unknown as string) === 'offer-received')
     if (rec) return rec
     await new Promise((r) => setTimeout(r, intervalMs))
   }
