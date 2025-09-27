@@ -5,7 +5,7 @@ import type { WorkflowTemplate } from './types'
 const ajv = new Ajv({ allErrors: true, strict: false })
 addFormats(ajv)
 
-const schema: any = {
+const schema = {
   type: 'object',
   required: ['template_id', 'version', 'title', 'instance_policy', 'states', 'transitions', 'catalog', 'actions'],
   properties: {
@@ -155,14 +155,15 @@ const schema: any = {
   additionalProperties: false,
 }
 
-const validate = ajv.compile(schema)
+const validate = ajv.compile(schema as unknown as object)
 
 export function validateTemplateJson(tpl: unknown) {
   const ok = validate(tpl)
   if (!ok) {
-    const msg = (validate.errors || []).map((e: any) => `${e.instancePath || 'template'} ${e.message}`).join('; ')
-    const err = new Error(msg)
-    ;(err as any).code = 'invalid_template'
+    const errs = (validate.errors || []) as Array<{ instancePath?: string; message?: string }>
+    const msg = errs.map((e) => `${e.instancePath || 'template'} ${e.message}`).join('; ')
+    const err = new Error(msg) as Error & { code: string }
+    err.code = 'invalid_template'
     throw err
   }
 }
@@ -171,51 +172,55 @@ export function validateTemplateRefs(t: WorkflowTemplate) {
   // Structural checks beyond schema
   const stateNames = new Set(t.states.map((s) => s.name))
   if (![...t.states].some((s) => s.type === 'start')) {
-    const err = new Error('start state required')
-    ;(err as any).code = 'invalid_template'
+    const err = new Error('start state required') as Error & { code?: string }
+    err.code = 'invalid_template'
     throw err
   }
   for (const s of t.states) {
     if (s.section && !t.sections?.some((sec) => sec.name === s.section)) {
-      const err = new Error(`state.section not found: ${s.section}`)
-      ;(err as any).code = 'invalid_template'
+      const err = new Error(`state.section not found: ${s.section}`) as Error & { code?: string }
+      err.code = 'invalid_template'
       throw err
     }
   }
   for (const tr of t.transitions) {
     if (!stateNames.has(tr.from)) {
-      const err = new Error(`transition.from unknown: ${tr.from}`)
-      ;(err as any).code = 'invalid_template'
+      const err = new Error(`transition.from unknown: ${tr.from}`) as Error & { code?: string }
+      err.code = 'invalid_template'
       throw err
     }
     if (!stateNames.has(tr.to)) {
-      const err = new Error(`transition.to unknown: ${tr.to}`)
-      ;(err as any).code = 'invalid_template'
+      const err = new Error(`transition.to unknown: ${tr.to}`) as Error & { code?: string }
+      err.code = 'invalid_template'
       throw err
     }
     if (tr.action && !t.actions.some((a) => a.key === tr.action)) {
-      const err = new Error(`transition.action unknown: ${tr.action}`)
-      ;(err as any).code = 'invalid_template'
+      const err = new Error(`transition.action unknown: ${tr.action}`) as Error & { code?: string }
+      err.code = 'invalid_template'
       throw err
     }
   }
   for (const a of t.actions) {
-    const pr: any = (a as any).profile_ref
-    if (pr) {
+    if ('profile_ref' in a) {
+      const pr = (a as { profile_ref: string }).profile_ref
       if (pr.startsWith('cp.')) {
         const key = pr.slice(3)
         if (!t.catalog?.credential_profiles || !t.catalog.credential_profiles[key]) {
           const err = new Error(`catalog.cp missing: ${key}`)
-          ;(err as any).code = 'invalid_template'
+          ;(err as Error & { code?: string }).code = 'invalid_template'
           throw err
         }
       } else if (pr.startsWith('pp.')) {
         const key = pr.slice(3)
         if (!t.catalog?.proof_profiles || !t.catalog.proof_profiles[key]) {
           const err = new Error(`catalog.pp missing: ${key}`)
-          ;(err as any).code = 'invalid_template'
+          ;(err as Error & { code?: string }).code = 'invalid_template'
           throw err
         }
+      } else if (typeof pr === 'string') {
+        const err = new Error(`invalid profile_ref: ${pr}`)
+        ;(err as Error & { code?: string }).code = 'invalid_template'
+        throw err
       }
     }
   }
